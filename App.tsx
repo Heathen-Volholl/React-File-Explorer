@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import ClipboardManager from './components/ClipboardManager';
 import { Sidebar } from './components/Sidebar';
 import { SettingsModal } from './components/SettingsModal';
 import { FileBrowser } from './components/FileBrowser';
@@ -8,6 +9,11 @@ import { ToastProvider } from './contexts/ToastContext';
 import { ToastContainer } from './components/ToastContainer';
 
 const App: React.FC = () => {
+    // If ?clipgenius is present in the URL, render only ClipboardManager
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('clipgenius')) {
+        return <ClipboardManager />;
+    }
     // Quick Access state
     const [quickAccess, setQuickAccess] = useState<{ label: string; path: string }[]>([]);
 

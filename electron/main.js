@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron';
 import path from 'path';
 import { promises as fs, constants as fsConstants } from 'fs';
 import fsSync from 'fs';
@@ -11,6 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let mainWindow;
+let clipboardWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -25,6 +26,58 @@ function createWindow() {
     },
     titleBarStyle: 'default',
     show: false
+  });
+
+  // Set up custom context menu
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show Clipboard Manager',
+      click: () => {
+        if (clipboardWindow && !clipboardWindow.isDestroyed()) {
+          clipboardWindow.focus();
+          return;
+        }
+        clipboardWindow = new BrowserWindow({
+          width: 900,
+          height: 700,
+          minWidth: 600,
+          minHeight: 400,
+          parent: mainWindow,
+          modal: false,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.cjs')
+          },
+          title: 'Clipboard Manager',
+        });
+        // Load the same app, but you may want to load a dedicated route/component
+        const isDev = process.env.NODE_ENV === 'development' || 
+                      process.argv.includes('--dev') || 
+                      !app.isPackaged ||
+                      process.env.ELECTRON_IS_DEV === 'true';
+        if (isDev) {
+          clipboardWindow.loadURL('http://localhost:5173?clipgenius').catch(() => {
+            clipboardWindow.loadFile(path.join(__dirname, '../index.html'));
+          });
+        } else {
+          clipboardWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+        }
+        clipboardWindow.on('closed', () => {
+          clipboardWindow = null;
+        });
+      }
+    },
+    { type: 'separator' },
+    { role: 'copy' },
+    { role: 'cut' },
+    { role: 'paste' },
+    { type: 'separator' },
+    { role: 'selectAll' },
+  ]);
+
+  mainWindow.webContents.on('context-menu', (e, params) => {
+    contextMenu.popup({ window: mainWindow });
   });
 
   // Load the app - check multiple ways to detect development

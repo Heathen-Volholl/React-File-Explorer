@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFileSystem } from '../hooks/useFileSystem';
 import { FileSystemItem, FileType, TabState } from '../types';
 import { FileItemView } from './FileItemView';
-import { ContextMenu } from './ContextMenu';
+// import ClipboardManager from './ClipboardManager';
 import { PropertiesModal } from './PropertiesModal';
 import { useToast } from '../contexts/ToastContext';
 import { zipFiles, unzipFile, tarFiles, untarFile, sevenZipFiles, unsevenZipFile } from '../hooks/useArchiveActions';
@@ -39,13 +39,7 @@ export const FileList: React.FC<FileListProps> = ({
     const { getContents } = useFileSystem();
     const { addToast } = useToast();
     const [selectedItem, setSelectedItem] = useState<string | null>(null);
-    const [contextMenu, setContextMenu] = useState<ContextMenuState>({ 
-        visible: false, 
-        x: 0, 
-        y: 0, 
-        item: null, 
-        itemPath: null 
-    });
+    // const [showClipboard, setShowClipboard] = useState(false);
     const [propertiesModalItem, setPropertiesModalItem] = useState<FileSystemItem | null>(null);
     const [items, setItems] = useState<FileSystemItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -98,77 +92,20 @@ export const FileList: React.FC<FileListProps> = ({
         }
     };
     
-    const handleContextMenu = (e: React.MouseEvent, item: FileSystemItem | null = null, itemPath: string | null = null) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setContextMenu({ visible: true, x: e.clientX, y: e.clientY, item, itemPath });
-        if(item && itemPath) {
-            setSelectedItem(isSearchMode ? itemPath : item.name);
-            onSelectionChange(item, itemPath);
-        }
-    };
+    // Restore default system context menu; no custom modal
+    const handleContextMenu = undefined;
 
-    const closeContextMenu = () => setContextMenu({ 
-        ...contextMenu, 
-        visible: false, 
-        item: null, 
-        itemPath: null 
-    });
+    // No context menu to close
 
-    useEffect(() => {
-        const handleClickOutside = () => closeContextMenu();
-        window.addEventListener('click', handleClickOutside);
-        return () => window.removeEventListener('click', handleClickOutside);
-    }, []);
+    // No context menu to close
 
+    // No context menu actions; archive/quick access actions are no-ops or show a toast
     const handleAction = async (action: string, item: any) => {
-        try {
-            if (action === 'Properties' && item) {
-                setPropertiesModalItem(item);
-            } else if (action === 'Zip' && item) {
-                await zipFiles([contextMenu.itemPath!], item.output);
-                addToast(`Zipped to ${item.output}`);
-                await handleRefresh();
-            } else if (action === 'Unzip' && item) {
-                await unzipFile(contextMenu.itemPath!, item.output);
-                addToast(`Unzipped to ${item.output}`);
-                await handleRefresh();
-            } else if (action === 'Tar' && item) {
-                await tarFiles([contextMenu.itemPath!], item.output);
-                addToast(`Tarred to ${item.output}`);
-                await handleRefresh();
-            } else if (action === 'Untar' && item) {
-                await untarFile(contextMenu.itemPath!, item.output);
-                addToast(`Untarred to ${item.output}`);
-                await handleRefresh();
-            } else if (action === '7z' && item) {
-                await sevenZipFiles([contextMenu.itemPath!], item.output);
-                addToast(`7z archive created: ${item.output}`);
-                await handleRefresh();
-            } else if (action === 'Un7z' && item) {
-                await unsevenZipFile(contextMenu.itemPath!, item.output);
-                addToast(`Un7z extracted to ${item.output}`);
-                await handleRefresh();
-            } else if (action === 'Encrypt' && item) {
-                addToast(`Successfully encrypted ${item.name}`);
-            } else if (action === 'AddQuickAccess' && item) {
-                onAddQuickAccess && onAddQuickAccess({ label: item.name, path: contextMenu.itemPath! });
-                addToast(`Added to Quick Access: ${item.name}`);
-            } else if (action === 'RemoveQuickAccess' && item) {
-                onRemoveQuickAccess && onRemoveQuickAccess(contextMenu.itemPath!);
-                addToast(`Removed from Quick Access: ${item.name}`);
-            } else {
-                addToast(`${action} action triggered${item ? ` on ${item.name}` : ''}`);
-            }
-        } catch (err: any) {
-            addToast(`Error: ${err.message || err}`);
-        }
-        closeContextMenu();
+        addToast('Clipboard actions are now handled via the Clipboard Manager.');
     };
 
     const handleRefresh = async () => {
         if (isSearchMode) return;
-        
         try {
             setIsLoading(true);
             const contents = await getContents(path);
@@ -185,7 +122,6 @@ export const FileList: React.FC<FileListProps> = ({
     return (
         <div
             className="flex-1 overflow-y-auto p-2"
-            onContextMenu={(e) => handleContextMenu(e)}
             onClick={() => setSelectedItem(null)}
         >
             <table className="w-full text-left text-sm">
@@ -223,7 +159,7 @@ export const FileList: React.FC<FileListProps> = ({
                                         handleItemClick(item, itemPath);
                                     }}
                                     onDoubleClick={() => handleItemDoubleClick(item, itemPath)}
-                                    onContextMenu={(e) => handleContextMenu(e, item, itemPath)}
+                                    // onContextMenu={(e) => handleContextMenu(e, item, itemPath)}
                                 />
                             ))
                         ) : (
@@ -246,7 +182,7 @@ export const FileList: React.FC<FileListProps> = ({
                                         handleItemClick(item, itemPath);
                                     }}
                                     onDoubleClick={() => handleItemDoubleClick(item, itemPath)}
-                                    onContextMenu={(e) => handleContextMenu(e, item, itemPath)}
+                                    // onContextMenu={(e) => handleContextMenu(e, item, itemPath)}
                                 />
                             );
                         })
@@ -259,19 +195,11 @@ export const FileList: React.FC<FileListProps> = ({
                     )}
                 </tbody>
             </table>
-            {contextMenu.visible && (
-                <ContextMenu 
-                    {...contextMenu} 
-                    currentPath={path}
-                    onAction={handleAction}
-                    onRefresh={handleRefresh}
-                    quickAccess={quickAccess}
-                />
-            )}
+                        {/* Clipboard modal removed; system context menu is now default */}
             {propertiesModalItem && (
                 <PropertiesModal
                     item={propertiesModalItem}
-                    path={contextMenu.itemPath!}
+                    path={path}
                     onClose={() => setPropertiesModalItem(null)}
                 />
             )}
