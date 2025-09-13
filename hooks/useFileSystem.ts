@@ -1,8 +1,16 @@
-import { useCallback } from 'react';
+// Utility to detect and warn about web mode
+export function getWebModeWarning(): string | null {
+  if (!window.electronAPI) {
+    return '⚠️ Running in web mode with mock data. File operations are not real.';
+  }
+  return null;
+}
+import { useCallback, useState, useEffect } from 'react';
 import { FileSystemItem, FileType } from '../types';
 
-export const mockFileSystem: { [key: string]: FileSystemItem } = {
-    'C:': {
+// Mock data for web version fallback
+const mockFileSystem: { [key: string]: FileSystemItem } = {
+    'C:\\': {
         name: 'Local Disk (C:)',
         type: FileType.Drive,
         children: {
@@ -10,114 +18,281 @@ export const mockFileSystem: { [key: string]: FileSystemItem } = {
                 name: 'Users',
                 type: FileType.Directory,
                 children: {
-                    'DefaultUser': {
-                        name: 'DefaultUser',
+                    'Public': {
+                        name: 'Public',
                         type: FileType.Directory,
                         children: {
-                            'Desktop': { name: 'Desktop', type: FileType.Directory, children: {} },
                             'Documents': {
                                 name: 'Documents',
                                 type: FileType.Directory,
                                 children: {
-                                    'report.docx': { name: 'report.docx', type: FileType.File, size: '1.2 MB', modified: '2023-10-27' },
-                                    'presentation.pptx': { name: 'presentation.pptx', type: FileType.File, size: '5.4 MB', modified: '2023-10-26' },
-                                    'notes.txt': { name: 'notes.txt', type: FileType.File, size: '5 KB', modified: '2023-11-01' },
-                                    'data.zip': { name: 'data.zip', type: FileType.File, size: '12.8 MB', modified: '2023-10-25' },
-                                    'deep-learning-notes.pdf': { name: 'deep-learning-notes.pdf', type: FileType.File, size: '2.5 MB', modified: '2023-10-28' },
-                                }
-                            },
-                            'Downloads': { 
-                                name: 'Downloads', 
-                                type: FileType.Directory, 
-                                children: {
-                                    'sample-video.mp4': { name: 'sample-video.mp4', type: FileType.File, size: '15.2 MB', modified: '2023-10-29' },
-                                    'archive.7z': { name: 'archive.7z', type: FileType.File, size: '8.9 MB', modified: '2023-11-02' },
-                                } 
-                            },
-                            'Pictures': {
-                                name: 'Pictures',
-                                type: FileType.Directory,
-                                children: {
-                                    'vacation.jpg': { name: 'vacation.jpg', type: FileType.File, size: '3.1 MB', modified: '2023-08-15' },
-                                    'family.png': { name: 'family.png', type: FileType.File, size: '2.5 MB', modified: '2023-09-01' },
-                                    'logo.svg': { name: 'logo.svg', type: FileType.File, size: '15 KB', modified: '2023-07-20' },
-                                }
-                            },
-                            'Music': {
-                                name: 'Music',
-                                type: FileType.Directory,
-                                children: {
-                                    'sample-audio.mp3': { name: 'sample-audio.mp3', type: FileType.File, size: '4.1 MB', modified: '2023-10-30' },
+                                    'sample.txt': { name: 'sample.txt', type: FileType.File, size: '1 KB', modified: '2023-10-27' },
                                 }
                             }
                         }
-                    },
-                    'Public': { name: 'Public', type: FileType.Directory, children: {} }
+                    }
                 }
             },
             'Windows': { name: 'Windows', type: FileType.Directory, children: {} },
             'Program Files': { name: 'Program Files', type: FileType.Directory, children: {} }
         }
-    },
-    'D:': {
-        name: 'Data (D:)',
-        type: FileType.Drive,
-        children: {
-            'Projects': {
-                name: 'Projects',
-                type: FileType.Directory,
-                children: {
-                    'readme.md': { name: 'readme.md', type: FileType.File, size: '2 KB', modified: '2023-10-01' }
-                }
-            }
-        }
     }
 };
 
-export const useFileSystem = () => {
-    const getHomePath = () => 'C:/Users/DefaultUser';
-
-    const getDrives = () => {
-        return Object.keys(mockFileSystem).map(key => ({
-            name: mockFileSystem[key].name,
-            type: FileType.Drive,
-            path: key
-        }));
+// Extend the window interface
+declare global {
+  interface Window {
+    electronAPI?: {
+      readDirectory: (path: string) => Promise<any[]>;
+      getFileStats: (path: string) => Promise<any>;
+      getDrives: () => Promise<any[]>;
+      getHome: () => Promise<string>;
+      getSpecialFolders: () => Promise<{[key: string]: string}>;
+      copyFile: (source: string, dest: string) => Promise<boolean>;
+      moveFile: (source: string, dest: string) => Promise<boolean>;
+      deleteFile: (path: string) => Promise<boolean>;
+      createDirectory: (path: string) => Promise<boolean>;
+      openFile: (path: string) => Promise<boolean>;
+      showInFolder: (path: string) => Promise<void>;
+      searchWindows: (query: string, searchPath?: string) => Promise<any[]>;
+      platform: string;
     };
+  }
+}
 
-    const getItem = useCallback((path: string): FileSystemItem | null => {
-        const parts = path.replace(/\\/g, '/').split('/').filter(p => p);
-        if (parts.length === 0) return null;
+export const useFileSystem = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [specialFolders, setSpecialFolders] = useState<{[key: string]: string}>({});
+
+  const isElectron = !!window.electronAPI;
+
+  // Load special folders on mount - only once
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isElectron) {
+      window.electronAPI!.getSpecialFolders()
+        .then(folders => {
+          if (isMounted) {
+            setSpecialFolders(folders);
+          }
+        })
+        .catch(err => {
+          if (isMounted) {
+            console.error('Failed to load special folders:', err);
+          }
+        });
+    }
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [isElectron]);
+
+  // Simple synchronous function - no state updates
+  const getHomePath = useCallback((): string => {
+    if (!isElectron) return 'C:\\'; // Simple fallback for web mode
+    return specialFolders.home || 'C:\\';
+  }, [isElectron, specialFolders]);
+
+  const getDrives = useCallback(async () => {
+    if (!isElectron) {
+      return [
+        { name: 'Local Disk (C:)', path: 'C:\\', type: FileType.Drive }
+      ];
+    }
+    
+    try {
+      const drives = await window.electronAPI!.getDrives();
+      return drives.map(drive => ({
+        ...drive,
+        type: FileType.Drive
+      }));
+    } catch (err: any) {
+      console.error('Failed to get drives:', err);
+      throw err;
+    }
+  }, [isElectron]);
+
+  const getContents = useCallback(async (path: string): Promise<FileSystemItem[]> => {
+    if (!isElectron) {
+      // Fallback to mock data for web version
+      const mockGetContents = (path: string): FileSystemItem[] => {
+        // Normalize path
+        const normalizedPath = path.replace(/\//g, '\\');
         
-        // Handle root path like 'C:'
-        if (parts.length === 1 && mockFileSystem[parts[0]]) {
-            return mockFileSystem[parts[0]];
-        }
-
-        let currentLevel = mockFileSystem[parts[0]];
-        if (!currentLevel) return null;
-
-        for (let i = 1; i < parts.length; i++) {
-            const part = parts[i];
-            if (currentLevel.children && currentLevel.children[part]) {
-                currentLevel = currentLevel.children[part];
-            } else {
-                return null;
-            }
-        }
-        return currentLevel;
-    }, []);
-
-    const getContents = useCallback((path: string): FileSystemItem[] => {
-        const item = getItem(path);
-        if (item && item.type !== FileType.File && item.children) {
-            return Object.values(item.children).sort((a, b) => {
-                if (a.type === b.type) return a.name.localeCompare(b.name);
-                return a.type === FileType.Directory ? -1 : 1;
+        // Handle root cases
+        if (normalizedPath === 'C:' || normalizedPath === 'C:\\') {
+          const rootItem = mockFileSystem['C:\\'];
+          if (rootItem && rootItem.children) {
+            return Object.values(rootItem.children).sort((a, b) => {
+              if (a.type === b.type) return a.name.localeCompare(b.name);
+              return a.type === FileType.Directory ? -1 : 1;
             });
+          }
+          return [];
+        }
+        
+        // Navigate through the mock structure
+        const parts = normalizedPath.split('\\').filter(p => p && p !== 'C:');
+        let currentLevel = mockFileSystem['C:\\'];
+        
+        if (!currentLevel) return [];
+
+        for (const part of parts) {
+          if (currentLevel.children && currentLevel.children[part]) {
+            currentLevel = currentLevel.children[part];
+          } else {
+            return [];
+          }
+        }
+        
+        if (currentLevel && currentLevel.children) {
+          return Object.values(currentLevel.children).sort((a, b) => {
+            if (a.type === b.type) return a.name.localeCompare(b.name);
+            return a.type === FileType.Directory ? -1 : 1;
+          });
         }
         return [];
-    }, [getItem]);
+      };
+      
+      return mockGetContents(path);
+    }
 
-    return { getHomePath, getDrives, getContents, getItem };
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const items = await window.electronAPI!.readDirectory(path);
+      return items.map(item => ({
+        name: item.name,
+        type: item.type === 'directory' ? FileType.Directory : FileType.File,
+        size: item.size,
+        modified: item.modified,
+        fullPath: item.fullPath,
+        extension: item.extension
+      }));
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isElectron]);
+
+  const getItem = useCallback(async (path: string): Promise<FileSystemItem | null> => {
+    if (!isElectron) {
+      // Mock implementation for web mode
+      const normalizedPath = path.replace(/\//g, '\\');
+      if (normalizedPath === 'C:' || normalizedPath === 'C:\\') {
+        return mockFileSystem['C:\\'];
+      }
+      return null;
+    }
+    
+    try {
+      const stats = await window.electronAPI!.getFileStats(path);
+      const name = path.split(/[/\\]/).pop() || '';
+      
+      return {
+        name,
+        type: stats.isDirectory ? FileType.Directory : FileType.File,
+        size: stats.size,
+        modified: new Date(stats.modified).toLocaleDateString(),
+        fullPath: path
+      };
+    } catch (err: any) {
+      setError(err.message);
+      return null;
+    }
+  }, [isElectron]);
+
+  // File operations (only work in Electron)
+  const copyFile = useCallback(async (source: string, dest: string): Promise<boolean> => {
+    if (!isElectron) return false;
+    
+    try {
+      return await window.electronAPI!.copyFile(source, dest);
+    } catch (err: any) {
+      setError(err.message);
+      return false;
+    }
+  }, [isElectron]);
+
+  const moveFile = useCallback(async (source: string, dest: string): Promise<boolean> => {
+    if (!isElectron) return false;
+    
+    try {
+      return await window.electronAPI!.moveFile(source, dest);
+    } catch (err: any) {
+      setError(err.message);
+      return false;
+    }
+  }, [isElectron]);
+
+  const deleteFile = useCallback(async (path: string): Promise<boolean> => {
+    if (!isElectron) return false;
+    
+    try {
+      return await window.electronAPI!.deleteFile(path);
+    } catch (err: any) {
+      setError(err.message);
+      return false;
+    }
+  }, [isElectron]);
+
+  const createDirectory = useCallback(async (path: string): Promise<boolean> => {
+    if (!isElectron) return false;
+    
+    try {
+      return await window.electronAPI!.createDirectory(path);
+    } catch (err: any) {
+      setError(err.message);
+      return false;
+    }
+  }, [isElectron]);
+
+  const openFile = useCallback(async (path: string): Promise<boolean> => {
+    if (!isElectron) return false;
+    
+    try {
+      return await window.electronAPI!.openFile(path);
+    } catch (err: any) {
+      setError(err.message);
+      return false;
+    }
+  }, [isElectron]);
+
+  const showInFolder = useCallback(async (path: string): Promise<void> => {
+    if (!isElectron) return;
+    
+    try {
+      await window.electronAPI!.showInFolder(path);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }, [isElectron]);
+
+  return {
+    // Properties
+    isElectron,
+    isLoading,
+    error,
+    specialFolders,
+    
+    // Original methods (keeping compatibility)
+    getHomePath,
+    getDrives,
+    getContents,
+    getItem,
+    
+    // New file operations
+    copyFile,
+    moveFile,
+    deleteFile,
+    createDirectory,
+    openFile,
+    showInFolder
+  };
 };

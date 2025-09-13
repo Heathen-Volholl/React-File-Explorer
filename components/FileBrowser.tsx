@@ -1,24 +1,27 @@
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { FilePane } from './FilePane';
 import { PreviewPane } from './PreviewPane';
 import { StatusBar } from './StatusBar';
 import { PaneState, FileSystemItem, TabState } from '../types';
-import { useSemanticSearch } from '../hooks/useSemanticSearch';
-import { mockFileSystem } from '../hooks/useFileSystem';
+import { useWindowsSearch } from '../hooks/useWindowsSearch';
+import { useFileSystem, getWebModeWarning } from '../hooks/useFileSystem';
 
 interface FileBrowserProps {
-    initialPanes: PaneState[];
+    panes: PaneState[];
+    setPanes: React.Dispatch<React.SetStateAction<PaneState[]>>;
+    quickAccess?: { label: string; path: string }[];
+    onAddQuickAccess?: (item: { label: string; path: string }) => void;
+    onRemoveQuickAccess?: (path: string) => void;
 }
 
-export const FileBrowser: React.FC<FileBrowserProps> = ({ initialPanes }) => {
-    const [panes, setPanes] = useState<PaneState[]>(initialPanes);
-    const [activePaneId, setActivePaneId] = useState<string>(initialPanes[0].id);
+export const FileBrowser: React.FC<FileBrowserProps> = ({ panes, setPanes, quickAccess, onAddQuickAccess, onRemoveQuickAccess }) => {
+    const [activePaneId, setActivePaneId] = useState<string>(panes[0].id);
     const [selectedItem, setSelectedItem] = useState<FileSystemItem | null>(null);
     const [selectedItemPath, setSelectedItemPath] = useState<string | null>(null);
     const [showPreview, setShowPreview] = useState(true);
 
-    const { search, isLoading: isSearchLoading, error: searchError } = useSemanticSearch();
+    const { search, isLoading: isSearchLoading, error: searchError, isAvailable: isSearchAvailable } = useWindowsSearch();
+    const { isElectron } = useFileSystem();
 
     const updatePaneState = useCallback((paneId: string, newPaneState: PaneState | ((prevState: PaneState) => PaneState)) => {
         setPanes(prevPanes => prevPanes.map(p => p.id === paneId ? (typeof newPaneState === 'function' ? newPaneState(p) : newPaneState) : p));
@@ -31,7 +34,10 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({ initialPanes }) => {
         const activeTab = activePane.tabs.find(t => t.id === activePane.activeTabId);
         if (!activeTab) return;
 
-        const results = await search(query, mockFileSystem);
+        // Use the current path as the search location for more targeted results
+        const searchPath = activeTab.path !== 'C:' && activeTab.path !== 'D:' ? activeTab.path : undefined;
+        
+        const results = await search(query, searchPath);
 
         updatePaneState(activePaneId, (currentPane) => {
             const newTabs = currentPane.tabs.map(t => {
@@ -50,8 +56,20 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({ initialPanes }) => {
         setSelectedItemPath(path);
     };
 
+    const webModeWarning = getWebModeWarning();
     return (
         <div className="flex-1 flex flex-col h-full relative">
+            {/* Show status messages */}
+            {webModeWarning && (
+                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 text-sm">
+                    {webModeWarning}
+                </div>
+            )}
+            {isElectron && !isSearchAvailable && (
+                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 text-sm">
+                    ⚠️ Windows Search not available. Search functionality will be limited.
+                </div>
+            )}
             <div className="flex flex-1 overflow-hidden">
                 {panes.map(pane => (
                     <div
@@ -65,6 +83,9 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({ initialPanes }) => {
                             isActive={activePaneId === pane.id}
                             onSelectionChange={handleSelectionChange}
                             onSearch={handleSearch}
+                            quickAccess={quickAccess}
+                            onAddQuickAccess={onAddQuickAccess}
+                            onRemoveQuickAccess={onRemoveQuickAccess}
                         />
                     </div>
                 ))}
@@ -79,7 +100,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({ initialPanes }) => {
             <StatusBar selectedItem={selectedItem} />
             {isSearchLoading && (
                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-explorer-bg-secondary px-4 py-2 rounded-md shadow-lg text-sm border border-explorer-border animate-pulse">
-                    Searching with AI...
+                    🔍 Searching with Windows Search...
                 </div>
             )}
             {searchError && (

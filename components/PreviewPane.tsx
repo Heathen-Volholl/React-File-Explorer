@@ -80,7 +80,7 @@ const ImagePreview: React.FC<{ itemName: string }> = ({ itemName }) => {
                 </div>
             )}
             <img
-                src={`httpshttps://picsum.photos/seed/${itemName}/400`}
+                src={`https://picsum.photos/seed/${itemName}/400`}
                 alt={itemName}
                 className={`max-w-full max-h-full object-contain rounded-md transition-opacity duration-500 ${
                     isLoading ? 'opacity-0' : 'opacity-100'

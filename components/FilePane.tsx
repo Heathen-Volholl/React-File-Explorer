@@ -11,9 +11,12 @@ interface FilePaneProps {
     isActive: boolean;
     onSelectionChange: (item: FileSystemItem, path: string) => void;
     onSearch: (query: string) => void;
+    quickAccess?: { label: string; path: string }[];
+    onAddQuickAccess?: (item: { label: string; path: string }) => void;
+    onRemoveQuickAccess?: (path: string) => void;
 }
 
-export const FilePane: React.FC<FilePaneProps> = ({ paneState, setPaneState, isActive, onSelectionChange, onSearch }) => {
+export const FilePane: React.FC<FilePaneProps> = ({ paneState, setPaneState, isActive, onSelectionChange, onSearch, quickAccess, onAddQuickAccess, onRemoveQuickAccess }) => {
     const activeTab = paneState.tabs.find(t => t.id === paneState.activeTabId);
 
     const updateTab = useCallback((tabId: string, newTabState: Partial<TabState>) => {
@@ -96,6 +99,9 @@ export const FilePane: React.FC<FilePaneProps> = ({ paneState, setPaneState, isA
                 onNavigate={navigate}
                 isActive={isActive}
                 onSelectionChange={onSelectionChange}
+                quickAccess={quickAccess}
+                onAddQuickAccess={onAddQuickAccess}
+                onRemoveQuickAccess={onRemoveQuickAccess}
             />
         </div>
     );

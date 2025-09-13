@@ -45,10 +45,10 @@ export const PropertiesModal: React.FC<PropertiesModalProps> = ({ item, path, on
                         <PropertyRow label="Size" value={item.size || '--'} />
                         <hr className="my-4 border-explorer-border" />
                         <PropertyRow label="Modified" value={item.modified || '--'} />
-                        <PropertyRow label="Created" value="2023-10-20" /> {/* Placeholder */}
-                        <PropertyRow label="Accessed" value="2023-11-15" /> {/* Placeholder */}
+                        <PropertyRow label="Created" value="(not available)" />
+                        <PropertyRow label="Accessed" value="(not available)" />
                         <hr className="my-4 border-explorer-border" />
-                        <PropertyRow label="Permissions" value="Read, Write, Execute" /> {/* Placeholder */}
+                        <PropertyRow label="Permissions" value="(not available)" />
                     </div>
                 </div>
 
