@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>React File Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'explorer-bg': 'var(--explorer-bg)',
+              'explorer-bg-secondary': 'var(--explorer-bg-secondary)',
+              'explorer-text': 'var(--explorer-text)',
+              'explorer-text-secondary': 'var(--explorer-text-secondary)',
+              'explorer-border': 'var(--explorer-border)',
+              'explorer-accent': 'var(--explorer-accent)',
+              'explorer-accent-text': 'var(--explorer-accent-text)',
+              'explorer-hover': 'var(--explorer-hover)',
+            },
+          },
+        },
+        darkMode: 'class',
+      }
+    </script>
+    <style>
+      :root {
+        --explorer-bg: #f3f3f3;
+        --explorer-bg-secondary: #ffffff;
+        --explorer-text: #202020;
+        --explorer-text-secondary: #606060;
+        --explorer-border: #e0e0e0;
+        --explorer-accent: #0078d4;
+        --explorer-accent-text: #ffffff;
+        --explorer-hover: #e5f3ff;
+      }
+      .dark {
+        --explorer-bg: #1f1f1f;
+        --explorer-bg-secondary: #2d2d2d;
+        --explorer-text: #f0f0f0;
+        --explorer-text-secondary: #a0a0a0;
+        --explorer-border: #404040;
+        --explorer-accent: #0078d4;
+        --explorer-accent-text: #ffffff;
+        --explorer-hover: #3a3a3a;
+      }
+      body {
+        font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        overscroll-behavior: none;
+      }
+    </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.19.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-explorer-bg text-explorer-text">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
