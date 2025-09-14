@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import SplitPane from 'react-split-pane';
 import { FilePane } from './FilePane';
 import { PreviewPane } from './PreviewPane';
 import { StatusBar } from './StatusBar';
@@ -61,42 +62,50 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({ panes, setPanes, quick
         <div className="flex-1 flex flex-col h-full relative">
             {/* Show status messages */}
             {webModeWarning && (
-                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 text-sm">
+                <div className="bg-explorer-warning/10 border-l-4 border-explorer-warning text-explorer-warning p-2 text-sm">
                     {webModeWarning}
                 </div>
             )}
             {isElectron && !isSearchAvailable && (
-                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 text-sm">
+                <div className="bg-explorer-warning/10 border-l-4 border-explorer-warning text-explorer-warning p-2 text-sm">
                     ⚠️ Windows Search not available. Search functionality will be limited.
                 </div>
             )}
-            <div className="flex flex-1 overflow-hidden">
-                {panes.map(pane => (
-                    <div
-                        key={pane.id}
-                        className={`flex-1 flex flex-col border-r border-explorer-border last:border-r-0 ${activePaneId === pane.id ? 'bg-explorer-bg-secondary' : 'bg-explorer-bg'}`}
-                        onClick={() => setActivePaneId(pane.id)}
-                    >
-                        <FilePane
-                            paneState={pane}
-                            setPaneState={(newState) => updatePaneState(pane.id, newState)}
-                            isActive={activePaneId === pane.id}
-                            onSelectionChange={handleSelectionChange}
-                            onSearch={handleSearch}
-                            quickAccess={quickAccess}
-                            onAddQuickAccess={onAddQuickAccess}
-                            onRemoveQuickAccess={onRemoveQuickAccess}
-                        />
-                    </div>
-                ))}
-                {showPreview && selectedItem && (
-                    <PreviewPane 
-                        item={selectedItem}
-                        path={selectedItemPath!}
-                        onClose={() => setShowPreview(false)} 
+            <SplitPane split="vertical" minSize={150} defaultSize="50%" allowResize={true} style={{ position: 'relative', height: '100%' }}>
+                {/* Left Pane */}
+                <div className="flex flex-col h-full">
+                    <FilePane
+                        paneState={panes[0]}
+                        setPaneState={(newState) => updatePaneState(panes[0].id, newState)}
+                        isActive={activePaneId === panes[0].id}
+                        onSelectionChange={handleSelectionChange}
+                        onSearch={handleSearch}
+                        quickAccess={quickAccess}
+                        onAddQuickAccess={onAddQuickAccess}
+                        onRemoveQuickAccess={onRemoveQuickAccess}
                     />
-                )}
-            </div>
+                </div>
+                {/* Right Pane (with preview if enabled) */}
+                <div className="flex flex-col h-full">
+                    <FilePane
+                        paneState={panes[1]}
+                        setPaneState={(newState) => updatePaneState(panes[1].id, newState)}
+                        isActive={activePaneId === panes[1].id}
+                        onSelectionChange={handleSelectionChange}
+                        onSearch={handleSearch}
+                        quickAccess={quickAccess}
+                        onAddQuickAccess={onAddQuickAccess}
+                        onRemoveQuickAccess={onRemoveQuickAccess}
+                    />
+                    {showPreview && selectedItem && (
+                        <PreviewPane 
+                            item={selectedItem}
+                            path={selectedItemPath!}
+                            onClose={() => setShowPreview(false)} 
+                        />
+                    )}
+                </div>
+            </SplitPane>
             <StatusBar selectedItem={selectedItem} />
             {isSearchLoading && (
                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-explorer-bg-secondary px-4 py-2 rounded-md shadow-lg text-sm border border-explorer-border animate-pulse">
@@ -104,7 +113,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({ panes, setPanes, quick
                 </div>
             )}
             {searchError && (
-                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-red-100 text-red-800 px-4 py-2 rounded-md shadow-lg text-sm border border-red-300">
+                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-explorer-danger/10 text-explorer-danger px-4 py-2 rounded-md shadow-lg text-sm border border-explorer-danger/30">
                     Error: {searchError}
                 </div>
             )}

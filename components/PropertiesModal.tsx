@@ -20,7 +20,7 @@ export const PropertiesModal: React.FC<PropertiesModalProps> = ({ item, path, on
 
     return (
         <div 
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-explorer-bg/80"
             onClick={onClose}
             aria-modal="true"
             role="dialog"

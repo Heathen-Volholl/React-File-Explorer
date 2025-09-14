@@ -53,7 +53,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, setIsOpe
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/50" onClick={() => setIsOpen(false)}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-explorer-bg/80" onClick={() => setIsOpen(false)}>
             <div
                 className="w-full max-w-lg bg-explorer-bg-secondary rounded-lg shadow-2xl overflow-hidden"
                 onClick={e => e.stopPropagation()}

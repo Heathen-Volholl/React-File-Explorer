@@ -25,7 +25,7 @@ export const FileItemView: React.FC<FileItemViewProps> = ({ item, isSelected, on
     return (
         <tr
             className={`rounded-md cursor-pointer select-none ${
-                isSelected ? 'bg-explorer-accent/20' : 'hover:bg-explorer-hover'
+                isSelected ? 'bg-explorer-accent/20' : 'hover:bg-explorer-scrollbar text-explorer-text'
             }`}
             onClick={onClick}
             onDoubleClick={onDoubleClick}

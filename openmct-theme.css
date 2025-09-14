@@ -1,0 +1,58 @@
+/*
+  Open MCT-inspired dark theme for React File Explorer
+  Add these variables to your global CSS (e.g., index.css or App.css)
+*/
+:root {
+  --explorer-bg: #232323;
+  --explorer-bg-secondary: #2d2d2d;
+  --explorer-panel: #313131;
+  --explorer-border: #393939;
+  --explorer-text: #f3f3f3;
+  --explorer-text-secondary: #b0b0b0;
+  --explorer-accent: #00baff;
+  --explorer-accent-hover: #0099cc;
+  --explorer-danger: #ff4b4b;
+  --explorer-badge: #393939;
+  --explorer-warning: #ffd600;
+  --explorer-statusbar: #232323;
+}
+
+body {
+  background: var(--explorer-bg);
+  color: var(--explorer-text);
+}
+
+/* Example usage for panels */
+.sidebar, .quick-access {
+  background: var(--explorer-bg-secondary);
+  color: var(--explorer-text);
+}
+
+.pane {
+  background: var(--explorer-panel);
+  color: var(--explorer-text);
+}
+
+.preview-pane {
+  background: var(--explorer-bg-secondary);
+  color: var(--explorer-text);
+}
+
+.status-bar {
+  background: var(--explorer-statusbar);
+  color: var(--explorer-text-secondary);
+  border-top: 1px solid var(--explorer-border);
+}
+
+.selected, .active {
+  background: var(--explorer-accent);
+  color: #fff;
+}
+
+a, .accent {
+  color: var(--explorer-accent);
+}
+
+a:hover, .accent:hover {
+  color: var(--explorer-accent-hover);
+}

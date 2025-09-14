@@ -116,7 +116,7 @@ const VideoPreview: React.FC<{ path: string }> = ({ path }) => {
     const videoUrl = 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4';
     
     return (
-        <div className="w-full h-full flex items-center justify-center bg-black rounded-md">
+    <div className="w-full h-full flex items-center justify-center bg-explorer-bg rounded-md">
             <video
                 key={path} // Add key to force re-render on item change
                 src={videoUrl}

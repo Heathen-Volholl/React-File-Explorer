@@ -1,0 +1,20 @@
+/* Open MCT-inspired dark scrollbars for all browsers */
+
+body, .sidebar, .pane, .preview-pane, .quick-access, .overflow-y-auto, .overflow-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #393939 #232323;
+}
+
+body::-webkit-scrollbar, .sidebar::-webkit-scrollbar, .pane::-webkit-scrollbar, .preview-pane::-webkit-scrollbar, .quick-access::-webkit-scrollbar, .overflow-y-auto::-webkit-scrollbar, .overflow-auto::-webkit-scrollbar {
+  width: 8px;
+  background: #232323;
+}
+
+body::-webkit-scrollbar-thumb, .sidebar::-webkit-scrollbar-thumb, .pane::-webkit-scrollbar-thumb, .preview-pane::-webkit-scrollbar-thumb, .quick-access::-webkit-scrollbar-thumb, .overflow-y-auto::-webkit-scrollbar-thumb, .overflow-auto::-webkit-scrollbar-thumb {
+  background: #393939;
+  border-radius: 6px;
+}
+
+body::-webkit-scrollbar-thumb:hover, .sidebar::-webkit-scrollbar-thumb:hover, .pane::-webkit-scrollbar-thumb:hover, .preview-pane::-webkit-scrollbar-thumb:hover, .quick-access::-webkit-scrollbar-thumb:hover, .overflow-y-auto::-webkit-scrollbar-thumb:hover, .overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: #313131;
+}

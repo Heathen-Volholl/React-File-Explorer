@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ tags, activeTag, onTagClick, template
                     <div key={t.id} className="group text-left text-sm p-2 rounded-md hover:bg-explorer-hover flex justify-between items-center">
                         <button onClick={() => onTemplateUse(t.content)} className="flex-grow text-left">
                             <p className="font-semibold">{t.name}</p>
-                            <p className="text-xs text-slate-400">{truncate(t.content, 30)}</p>
+                            <p className="text-xs text-explorer-text-secondary">{truncate(t.content, 30)}</p>
                         </button>
                         <button onClick={() => onTemplateDelete(t.id)} className="opacity-0 group-hover:opacity-100 p-1 text-explorer-danger hover:bg-explorer-danger/20 rounded"><Icons.Trash className="w-3 h-3"/></button>
                     </div>
@@ -89,7 +89,7 @@ const HistoryList: React.FC<HistoryListProps> = ({ items, selectedId, onSelect, 
                     >
                         <div className="flex items-start">
                             <div className="mr-3 pt-1">
-                                <ItemTypeIcon type={item.type} className="w-5 h-5 text-slate-400" />
+                                <ItemTypeIcon type={item.type} className="w-5 h-5 text-explorer-text-secondary" />
                             </div>
                             <div className="flex-1 overflow-hidden">
                                 {item.type === ItemType.IMAGE ? (

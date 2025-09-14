@@ -142,7 +142,7 @@ export const FileList: React.FC<FileListProps> = ({
                         </tr>
                     ) : error ? (
                         <tr>
-                            <td colSpan={isSearchMode ? 4 : 3} className="text-center text-red-500 p-4">
+                            <td colSpan={isSearchMode ? 4 : 3} className="text-center text-explorer-danger p-4">
                                 Error: {error}
                             </td>
                         </tr>
